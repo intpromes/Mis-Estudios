@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f766e">
+<title>Mis Estudios</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{--pri:#0f766e;--pri2:#ccfbf1;--bg:#f4f6f8;--card:#fff;--tx:#1f2937;--mut:#6b7280;--ok:#15803d;--warn:#b45309;--bad:#b91c1c;--bd:#e5e7eb}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx);padding-bottom:72px}
+header{background:var(--pri);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5}
+header h1{font-size:18px;margin:0;flex:1}
+header select{background:#ffffff22;color:#fff;border:1px solid #ffffff55;border-radius:8px;padding:6px 8px;font-size:14px;max-width:45%}
+header select option{color:#000}
+main{padding:12px;max-width:760px;margin:0 auto}
+section{display:none}section.on{display:block}
+h2{font-size:17px;margin:8px 0 12px}
+.card{background:var(--card);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 2px #0000000f}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tile{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 1px 2px #0000000f;cursor:pointer;border-left:4px solid var(--bd)}
+.tile .n{font-size:13px;color:var(--mut)}
+.tile .v{font-size:22px;font-weight:600;margin:4px 0}
+.tile .v small{font-size:12px;font-weight:400;color:var(--mut)}
+.tile .d{font-size:12px;color:var(--mut)}
+.s-ok{border-left-color:var(--ok)}.s-warn{border-left-color:var(--warn)}.s-bad{border-left-color:var(--bad)}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:10px;background:#eee}
+.tag.ok{background:#dcfce7;color:var(--ok)}.tag.warn{background:#fef3c7;color:var(--warn)}.tag.bad{background:#fee2e2;color:var(--bad)}
+button,.btn{font:inherit;border:0;border-radius:10px;padding:10px 14px;background:var(--pri);color:#fff;cursor:pointer;display:inline-block;text-align:center}
+button.sec,.btn.sec{background:var(--pri2);color:var(--pri)}
+button.del{background:#fee2e2;color:var(--bad)}
+button.sm{padding:6px 10px;font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1}
+label{font-size:13px;color:var(--mut);display:block;margin-bottom:8px}
+input,select,textarea{font:inherit;width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:8px;background:#fff;color:var(--tx);margin-top:3px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:7px 6px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:middle}
+th{color:var(--mut);font-weight:500;font-size:12px}
+.list .it{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--bd)}
+.list .it:last-child{border-bottom:0}
+.mut{color:var(--mut);font-size:13px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--bd);display:flex;z-index:5}
+nav button{flex:1;background:none;color:var(--mut);border-radius:0;padding:8px 2px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button svg{width:22px;height:22px}
+nav button.on{color:var(--pri);font-weight:600}
+.modal{position:fixed;inset:0;background:#0007;display:none;z-index:10;overflow:auto;padding:16px 10px}
+.modal.on{display:block}
+.modal .box{background:#fff;border-radius:14px;padding:16px;max-width:640px;margin:0 auto}
+canvas{width:100%;height:260px;display:block}
+.empty{text-align:center;color:var(--mut);padding:24px 8px}
+pre{white-space:pre-wrap;font-size:11px;background:#f3f4f6;padding:8px;border-radius:8px;max-height:220px;overflow:auto}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;display:none;z-index:20}
+.big{font-size:26px;font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <h1>Mis Estudios</h1>
+  <select id="perfilSel" aria-label="Persona"></select>
+</header>
+
+<main>
+  <!-- RESUMEN -->
+  <section id="v-resumen" class="on">
+    <div class="row" style="margin-bottom:12px">
+      <div class="card" style="margin:0"><div class="mut">IMC</div><div class="big" id="rImc">—</div><div id="rImcTag"></div></div>
+      <div class="card" style="margin:0"><div class="mut">Presión</div><div class="big" id="rPa">—</div><div id="rPaTag"></div></div>
+    </div>
+    <div class="card" style="margin-bottom:12px"><div class="mut">Peso</div><div class="big" id="rPeso">—</div><div class="mut" id="rPesoD"></div></div>
+    <h2>Últimos resultados de laboratorio</h2>
+    <div class="grid" id="rLabs"></div>
+    <p class="mut">Los rangos son de referencia general para adultos; tu laboratorio y tu médico pueden usar otros.</p>
+  </section>
+
+  <!-- ESTUDIOS -->
+  <section id="v-estudios">
+    <div class="card">
+      <div class="row">
+        <label class="btn" style="margin:0">Importar PDF<input type="file" id="pdfIn" accept="application/pdf" hidden></label>
+        <button class="sec" id="btnManual">Captura manual</button>
+      </div>
+      <p class="mut" style="margin-bottom:0">La app lee los valores del PDF y te los muestra para revisar antes de guardar. Todo queda guardado solo en este teléfono.</p>
+    </div>
+    <div class="card list" id="listaEstudios"></div>
+  </section>
+
+  <!-- SIGNOS -->
+  <section id="v-signos">
+    <div class="card">
+      <h2 style="margin-top:0">Nueva medición</h2>
+      <label>Fecha y hora<input type="datetime-local" id="sFecha"></label>
+      <div class="row">
+        <label>Peso (kg)<input type="number" step="0.1" inputmode="decimal" id="sPeso"></label>
+        <label>Estatura (cm)<input type="number" step="0.5" inputmode="decimal" id="sEst"></label>
+      </div>
+      <div class="row">
+        <label>Sistólica<input type="number" inputmode="numeric" id="sSis" placeholder="120"></label>
+        <label>Diastólica<input type="number" inputmode="numeric" id="sDia" placeholder="80"></label>
+        <label>Pulso<input type="number" inputmode="numeric" id="sPul"></label>
+      </div>
+      <label>Glucosa capilar (mg/dL, opcional)<input type="number" inputmode="decimal" id="sGlu"></label>
+      <label>Notas<input id="sNota" placeholder="en ayunas, después de comer…"></label>
+      <div class="mut" id="sImcPrev" style="margin-bottom:10px"></div>
+      <button id="btnSigno" style="width:100%">Guardar medición</button>
+    </div>
+    <div class="card list" id="listaSignos"></div>
+  </section>
+
+  <!-- GRAFICAS -->
+  <section id="v-graficas">
+    <div class="card">
+      <label>Indicador<select id="gSel"></select></label>
+      <canvas id="chart"></canvas>
+      <div class="mut" id="gRef" style="margin-top:6px"></div>
+    </div>
+    <div class="card"><table id="gTabla"></table></div>
+  </section>
+
+  <!-- AJUSTES -->
+  <section id="v-ajustes">
+    <div class="card">
+      <h2 style="margin-top:0">Personas</h2>
+      <div class="list" id="listaPerfiles"></div>
+      <div class="row" style="margin-top:10px"><input id="nuevoPerfil" placeholder="Nombre"><button id="btnPerfil" style="flex:0 0 auto">Agregar</button></div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">Respaldo</h2>
+      <p class="mut">Los datos viven solo en este teléfono. Exporta un respaldo de vez en cuando (incluye los PDFs) y guárdalo en Drive.</p>
+      <div class="row">
+        <button id="btnExport">Exportar respaldo</button>
+        <label class="btn sec" style="margin:0">Importar respaldo<input type="file" id="bkIn" accept=".json,application/json" hidden></label>
+      </div>
+    </div>
+    <div class="card mut">Mis Estudios v1.0 · Esta app no da diagnósticos; comenta tus resultados con tu médico.</div>
+  </section>
+</main>
+
+<nav id="nav">
+  <button data-v="resumen" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-8 9 8v8a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Resumen</button>
+  <button data-v="estudios"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></svg>Estudios</button>
+  <button data-v="signos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>Signos</button>
+  <button data-v="graficas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V4M4 20h16M8 16l4-5 3 3 5-7"/></svg>Gráficas</button>
+  <button data-v="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Ajustes</button>
+</nav>
+
+<!-- Modal de revisión -->
+<div class="modal" id="modal">
+  <div class="box">
+    <h2 style="margin-top:0" id="mTitulo">Revisar estudio</h2>
+    <div class="mut" id="mAviso" style="margin-bottom:10px"></div>
+    <div class="row">
+      <label>Fecha del estudio<input type="date" id="mFecha"></label>
+      <label>Laboratorio<input id="mLab" placeholder="opcional"></label>
+    </div>
+    <table><thead><tr><th>Estudio</th><th style="width:30%">Valor</th><th>Unidad</th><th></th></tr></thead><tbody id="mFilas"></tbody></table>
+    <div class="row" style="margin:10px 0">
+      <select id="mAdd"></select><button class="sec sm" id="mAddBtn" style="flex:0 0 auto">Agregar</button>
+    </div>
+    <details id="mTxtBox"><summary class="mut">Ver texto leído del PDF</summary><pre id="mTxt"></pre></details>
+    <div class="row" style="margin-top:14px">
+      <button class="sec" id="mCancel">Cancelar</button>
+      <button id="mSave">Guardar</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* ================= Catálogo de estudios ================= */
+// inc: regex sobre texto normalizado (minúsculas, sin acentos). exc: si la línea coincide, se ignora.
+const ANALITOS = [
+  {k:'hba1c', n:'Hemoglobina glucosilada (HbA1c)', u:'%', max:5.6, warn:6.4,
+   inc:/(hemoglobina\s+gl[iu]c[oa]?s?[iu]?lada|hemoglobina\s+glicada|hb\s*a\s*1\s*c|\ba1c\b)/},
+  {k:'glucosa', n:'Glucosa', u:'mg/dL', min:70, max:99, warn:125,
+   inc:/\bglucosa\b/, exc:/(post|pospran|curva|orina|capilar|\d\s*h(rs?|oras?)\b)/},
+  {k:'hdl', n:'Colesterol HDL', u:'mg/dL', min:40,
+   inc:/(\bc?[-\s]?h\.?d\.?l\b|alta densidad)/, exc:/\bno\s*-?\s*hdl|relacion|indice|cociente/},
+  {k:'ldl', n:'Colesterol LDL', u:'mg/dL', max:99, warn:159,
+   inc:/(\bc?[-\s]?l\.?d\.?l\b|baja densidad)/, exc:/(muy baja|relacion|indice|cociente)/},
+  {k:'vldl', n:'Colesterol VLDL', u:'mg/dL', max:30,
+   inc:/(\bv\.?l\.?d\.?l\b|muy baja densidad)/},
+  {k:'colesterol', n:'Colesterol total', u:'mg/dL', max:199, warn:239,
+   inc:/\bcolesterol\b/, exc:/(h\.?d\.?l|l\.?d\.?l|densidad|relacion|indice|no\s*-?\s*hdl|cociente)/},
+  {k:'trigliceridos', n:'Triglicéridos', u:'mg/dL', max:149, warn:199,
+   inc:/triglic[ae]ridos/},
+  {k:'acido_urico', n:'Ácido úrico', u:'mg/dL', min:3.4, max:7.0,
+   inc:/acido\s+urico/, exc:/orina/},
+  {k:'creatinina', n:'Creatinina', u:'mg/dL', min:0.6, max:1.3,
+   inc:/\bcreatinina\b/, exc:/(depuracion|orina|urinaria|cinasa|kinasa)/},
+  {k:'urea', n:'Urea', u:'mg/dL', min:15, max:45, inc:/\burea\b/, exc:/nitrogeno/},
+  {k:'bun', n:'Nitrógeno ureico (BUN)', u:'mg/dL', min:7, max:20, inc:/(nitrogeno\s+ureico|\bbun\b)/},
+  {k:'ast', n:'TGO / AST', u:'U/L', max:40, inc:/(\btgo\b|\bast\b|aspartato)/},
+  {k:'alt', n:'TGP / ALT', u:'U/L', max:41, inc:/(\btgp\b|\balt\b|alanina)/},
+  {k:'ggt', n:'GGT', u:'U/L', max:60, inc:/(\bggt\b|gamma\s*glutamil)/},
+  {k:'tsh', n:'TSH', u:'µUI/mL', min:0.4, max:4.0, inc:/(\btsh\b|tirotropina|estimulante\s+de\s+(la\s+)?tiroides)/},
+  {k:'hemoglobina', n:'Hemoglobina', u:'g/dL', min:12, max:17.5,
+   inc:/\bhemoglobina\b/, exc:/(gl[iu]c|corpuscular|media|\bhcm\b|\bchcm\b|a1c)/},
+  {k:'leucocitos', n:'Leucocitos', u:'miles/µL', min:4.5, max:11, inc:/leucocitos/, exc:/orina/},
+  {k:'plaquetas', n:'Plaquetas', u:'miles/µL', min:150, max:450, inc:/plaquetas/, exc:/volumen|vpm/},
+  {k:'vitd', n:'Vitamina D (25-OH)', u:'ng/mL', min:30, max:100, inc:/(vitamina\s*d|25\s*-?\s*oh|hidroxi\s*vitamina)/},
+  {k:'b12', n:'Vitamina B12', u:'pg/mL', min:200, max:900, inc:/(vitamina\s*b\s*-?\s*12|cobalamina)/},
+  {k:'ferritina', n:'Ferritina', u:'ng/mL', min:20, max:300, inc:/ferritina/},
+  {k:'psa', n:'Antígeno prostático (PSA)', u:'ng/mL', max:4, inc:/(\bpsa\b|antigeno\s+prostatico)/, exc:/libre/},
+];
+const AMAP = Object.fromEntries(ANALITOS.map(a=>[a.k,a]));
+
+/* ================= Lectura del PDF ================= */
+const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+
+async function pdfALineas(file){
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const pdf = await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
+  const lineas=[];
+  for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p);
+    const tc=await page.getTextContent();
+    const items=tc.items.filter(i=>i.str&&i.str.trim()).map(i=>({s:i.str,x:i.transform[4],y:i.transform[5],h:Math.abs(i.transform[3])||8}));
+    items.sort((a,b)=>b.y-a.y||a.x-b.x);
+    let act=null;
+    for(const it of items){
+      if(act && Math.abs(act.y-it.y) <= Math.max(2.5,it.h*0.4)) act.items.push(it);
+      else { act={y:it.y,items:[it]}; lineas.push(act); }
+    }
+  }
+  return lineas.map(l=>l.items.sort((a,b)=>a.x-b.x).map(i=>i.s.trim()).join(' ').replace(/\s+/g,' ').trim());
+}
+
+// Convierte "1,25" "250,000" "7.500" "<0.5" a número
+function aNumero(tok){
+  let t=tok.replace(/[<>≤≥=\s]/g,'');
+  if(/^\d{1,3}(,\d{3})+$/.test(t)) t=t.replace(/,/g,'');
+  else if(/^\d{1,3}(\.\d{3})+$/.test(t) && t.split('.').pop().length===3 && !/^0\./.test(t)) t=t.replace(/\./g,'');
+  else t=t.replace(',','.');
+  const n=parseFloat(t); return isFinite(n)?n:null;
+}
+const NUM=/(?:^|[\s:=*(])([<>≤≥]?\s?\d{1,3}(?:[.,]\d{3})+(?![\d.,])|[<>≤≥]?\s?\d+(?:[.,]\d+)?)/;
+
+function primerNumero(txt){
+  // quita rangos tipo "70 - 100" solo si aparecen antes de cualquier número suelto no es posible; tomamos el primer número
+  const m=txt.match(NUM); return m?aNumero(m[1]):null;
+}
+
+function interpretar(lineas){
+  const N=lineas.map(norm), usadas=new Set(), res={};
+  for(const a of ANALITOS){
+    for(let i=0;i<N.length;i++){
+      if(usadas.has(i)) continue;
+      const l=N[i], m=l.match(a.inc);
+      if(!m || (a.exc && a.exc.test(l))) continue;
+      let resto=l.slice(m.index+m[0].length)
+        .replace(/25\s*-?\s*oh|\b\d+\s*(er|ra|a)\.?\s+generacion|\bb\s*-?\s*12\b|hb\s*a\s*1\s*c|\ba1c\b|\bt[34]\b/g,' ');
+      let v=primerNumero(resto);
+      if(v===null && i+1<N.length && /^[<>]?\s?\d/.test(N[i+1])) { v=primerNumero(' '+N[i+1]); }
+      if(v===null) continue;
+      if((a.k==='plaquetas'||a.k==='leucocitos') && v>=1000) v=+(v/1000).toFixed(1); // 250,000/µL → 250 miles/µL
+      res[a.k]=v; usadas.add(i); break;
+    }
+  }
+  return {valores:res, fecha:detectarFecha(N), lab:detectarLab(N)};
+}
+
+const MESES={ene:1,enero:1,feb:2,febrero:2,mar:3,marzo:3,abr:4,abril:4,may:5,mayo:5,jun:6,junio:6,jul:7,julio:7,ago:8,agosto:8,sep:9,sept:9,septiembre:9,setiembre:9,oct:10,octubre:10,nov:11,noviembre:11,dic:12,diciembre:12};
+function detectarFecha(N){
+  const pats=[
+    [/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4}|\d{2})\b/, m=>[m[1],m[2],m[3]]],
+    [/(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/, m=>[m[3],m[2],m[1]]],
+    [/(\d{1,2})\s*(?:de\s*)?[\/\-.]?\s*(ene|feb|mar|abr|may|jun|jul|ago|sept?|oct|nov|dic)[a-z]*\.?\s*[\/\-.]?\s*(?:de\s*|del\s*)?(\d{4})/, m=>[m[1],MESES[m[2]],m[3]]],
+  ];
+  const prio=N.map((l,i)=>({l,i,p:/(fecha|toma|muestra|recepcion|registro|emision)/.test(l)?0:1})).sort((a,b)=>a.p-b.p||a.i-b.i);
+  for(const {l} of prio){
+    if(/nacimiento|nac\b|f\.?\s*nac/.test(l)) continue;
+    for(const [re,f] of pats){
+      const m=l.match(re); if(!m) continue;
+      let [d,mo,y]=f(m).map(Number); if(y<100) y+=2000;
+      if(mo>12&&d<=12)[d,mo]=[mo,d];
+      if(d>=1&&d<=31&&mo>=1&&mo<=12&&y>=1990&&y<=2100) return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    }
+  }
+  return null;
+}
+function detectarLab(N){
+  const conocidos=[['chopo','Chopo'],['salud digna','Salud Digna'],['olab','Olab'],['jenner','Jenner'],['azteca','Laboratorio Azteca'],['carpermor','Carpermor'],['medica sur','Médica Sur'],['star medica','Star Médica'],['angeles','Hospital Ángeles'],['quest','Quest'],['biomedica','Biomédica'],['polanco','Laboratorio Polanco'],['imss','IMSS'],['issste','ISSSTE']];
+  const t=N.slice(0,40).join(' ');
+  for(const [k,v] of conocidos) if(t.includes(k)) return v;
+  return '';
+}
+
+/* ================= Base de datos local ================= */
+const DB={db:null,
+  open(){return new Promise((ok,ko)=>{const r=indexedDB.open('misestudios',1);
+    r.onupgradeneeded=()=>{for(const s of ['perfiles','estudios','signos']) if(!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s,{keyPath:'id'});};
+    r.onsuccess=()=>{this.db=r.result;ok();}; r.onerror=()=>ko(r.error);});},
+  tx(s,m,f){return new Promise((ok,ko)=>{const t=this.db.transaction(s,m);const st=t.objectStore(s);const r=f(st);t.oncomplete=()=>ok(r&&r.result);t.onerror=()=>ko(t.error);});},
+  all(s){return this.tx(s,'readonly',st=>st.getAll());},
+  put(s,o){return this.tx(s,'readwrite',st=>st.put(o));},
+  del(s,id){return this.tx(s,'readwrite',st=>st.delete(id));}
+};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+/* ================= Estado ================= */
+let S={perfiles:[],estudios:[],signos:[],perfil:null};
+const $=id=>document.getElementById(id);
+const fmtF=iso=>{if(!iso)return'';const d=new Date(iso.length===10?iso+'T12:00':iso);return d.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'});};
+const fmtN=v=>v==null?'—':(+v).toLocaleString('es-MX',{maximumFractionDigits:2});
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2500);}
+
+const misEstudios=()=>S.estudios.filter(e=>e.perfil===S.perfil).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+const misSignos=()=>S.signos.filter(e=>e.perfil===S.perfil).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+const perfilAct=()=>S.perfiles.find(p=>p.id===S.perfil);
+
+function estado(a,v){
+  if(v==null||!a) return '';
+  if(a.min!=null && v<a.min) return 'warn';
+  if(a.max!=null && v>a.max) return (a.warn!=null && v<=a.warn)?'warn':'bad';
+  return 'ok';
+}
+function etiquetaEstado(a,v){const s=estado(a,v);if(!s)return'';const t=s==='ok'?'En rango':(a.min!=null&&v<a.min)?'Bajo':'Alto';return `<span class="tag ${s}">${t}</span>`;}
+function imc(peso,est){if(!peso||!est)return null;const m=est/100;return peso/(m*m);}
+function imcCat(v){if(v==null)return['',''];if(v<18.5)return['Bajo peso','warn'];if(v<25)return['Normal','ok'];if(v<30)return['Sobrepeso','warn'];return['Obesidad','bad'];}
+function paCat(s,d){if(!s||!d)return['',''];if(s>=140||d>=90)return['Hipertensión 2','bad'];if(s>=130||d>=80)return['Hipertensión 1','warn'];if(s>=120)return['Elevada','warn'];return['Normal','ok'];}
+function refTexto(a){if(!a)return'';if(a.min!=null&&a.max!=null)return`${a.min}–${a.max} ${a.u}`;if(a.min!=null)return`≥ ${a.min} ${a.u}`;if(a.max!=null)return`≤ ${a.max} ${a.u}`;return'';}
+
+/* ================= Render ================= */
+function renderPerfiles(){
+  $('perfilSel').innerHTML=S.perfiles.map(p=>`<option value="${p.id}" ${p.id===S.perfil?'selected':''}>${esc(p.nombre)}</option>`).join('');
+  $('listaPerfiles').innerHTML=S.perfiles.map(p=>`<div class="it"><div>${esc(p.nombre)}${p.est?` <span class="mut">· ${p.est} cm</span>`:''}</div><div class="row" style="flex:0 0 auto"><button class="sec sm" data-ren="${p.id}">Renombrar</button>${S.perfiles.length>1?`<button class="del sm" data-delp="${p.id}">Borrar</button>`:''}</div></div>`).join('');
+}
+function ultimoSigno(campo){return misSignos().find(s=>s[campo]!=null&&s[campo]!=='');}
+function renderResumen(){
+  const p=perfilAct(), sp=ultimoSigno('peso'), est=(p&&p.est)||null;
+  const v=sp?imc(sp.peso,est):null, [ic,icS]=imcCat(v);
+  $('rImc').textContent=v?fmtN(v.toFixed(1)):'—';
+  $('rImcTag').innerHTML=v?`<span class="tag ${icS}">${ic}</span>`:`<span class="mut">${est?'Registra tu peso':'Registra peso y estatura'}</span>`;
+  $('rPeso').textContent=sp?fmtN(sp.peso)+' kg':'—'; $('rPesoD').textContent=sp?fmtF(sp.fecha):'';
+  const pa=misSignos().find(s=>s.sis&&s.dia), [pc,pcS]=pa?paCat(pa.sis,pa.dia):['',''];
+  $('rPa').textContent=pa?`${pa.sis}/${pa.dia}`:'—';
+  $('rPaTag').innerHTML=pa?`<span class="tag ${pcS}">${pc}</span> <span class="mut">${fmtF(pa.fecha)}</span>`:'<span class="mut">Sin registros</span>';
+  const ult={}; for(const e of misEstudios()) for(const [k,val] of Object.entries(e.valores)) if(!(k in ult)) ult[k]={v:val,f:e.fecha};
+  const keys=ANALITOS.map(a=>a.k).filter(k=>k in ult);
+  $('rLabs').innerHTML=keys.length?keys.map(k=>{const a=AMAP[k],u=ult[k];return`<div class="tile s-${estado(a,u.v)}" data-graf="${k}"><div class="n">${esc(a.n)}</div><div class="v">${fmtN(u.v)} <small>${a.u}</small></div><div class="d">${fmtF(u.f)} ${etiquetaEstado(a,u.v)}</div></div>`;}).join('')
+    :'<div class="empty" style="grid-column:1/-1">Aún no hay estudios. Ve a <b>Estudios</b> e importa tu primer PDF.</div>';
+}
+function renderEstudios(){
+  const l=misEstudios();
+  $('listaEstudios').innerHTML=l.length?l.map(e=>`<div class="it"><div><b>${fmtF(e.fecha)}</b>${e.lab?` · ${esc(e.lab)}`:''}<div class="mut">${Object.keys(e.valores).length} valores${e.nombreArchivo?' · '+esc(e.nombreArchivo):''}</div></div><div class="row" style="flex:0 0 auto">${e.pdf?`<button class="sec sm" data-pdf="${e.id}">PDF</button>`:''}<button class="sec sm" data-edit="${e.id}">Editar</button><button class="del sm" data-dele="${e.id}">✕</button></div></div>`).join('')
+    :'<div class="empty">Sin estudios guardados.</div>';
+}
+function renderSignos(){
+  const p=perfilAct(); if(p&&p.est&&!$('sEst').value) $('sEst').value=p.est;
+  const l=misSignos();
+  $('listaSignos').innerHTML=l.length?l.map(s=>{const partes=[];if(s.peso)partes.push(`${fmtN(s.peso)} kg`+(s.imc?` (IMC ${fmtN(s.imc.toFixed(1))})`:''));if(s.sis&&s.dia)partes.push(`PA ${s.sis}/${s.dia}`);if(s.pul)partes.push(`pulso ${s.pul}`);if(s.glu)partes.push(`glucosa ${s.glu}`);
+    return`<div class="it"><div><b>${fmtF(s.fecha)}</b> <span class="mut">${new Date(s.fecha).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}</span><div>${partes.join(' · ')}</div>${s.nota?`<div class="mut">${esc(s.nota)}</div>`:''}</div><button class="del sm" data-dels="${s.id}" style="flex:0 0 auto">✕</button></div>`;}).join('')
+    :'<div class="empty">Sin mediciones.</div>';
+}
+function opcionesGraf(){
+  const con=new Set(); misEstudios().forEach(e=>Object.keys(e.valores).forEach(k=>con.add(k)));
+  const ops=[['peso','Peso (kg)'],['imc','IMC'],['pa','Presión arterial'],['pulso','Pulso'],['gluc_cap','Glucosa capilar']];
+  ANALITOS.forEach(a=>{if(con.has(a.k))ops.push([a.k,a.n]);});
+  const sel=$('gSel'),act=sel.value;
+  sel.innerHTML=ops.map(([k,n])=>`<option value="${k}">${esc(n)}</option>`).join('');
+  if(ops.some(o=>o[0]===act)) sel.value=act;
+}
+function seriesDe(k){
+  const sg=misSignos().slice().reverse(), es=misEstudios().slice().reverse();
+  const pt=(arr,f)=>arr.filter(x=>f(x)!=null&&f(x)!=='').map(x=>({t:new Date(x.fecha.length===10?x.fecha+'T12:00':x.fecha).getTime(),v:+f(x),f:x.fecha}));
+  if(k==='peso') return {s:[{n:'Peso',c:'#0f766e',p:pt(sg,x=>x.peso)}],u:'kg'};
+  if(k==='imc') return {s:[{n:'IMC',c:'#0f766e',p:pt(sg,x=>x.imc?+x.imc.toFixed(1):null)}],u:'',ref:{min:18.5,max:24.9}};
+  if(k==='pa') return {s:[{n:'Sistólica',c:'#b91c1c',p:pt(sg,x=>x.sis)},{n:'Diastólica',c:'#2563eb',p:pt(sg,x=>x.dia)}],u:'mmHg',lines:[120,80]};
+  if(k==='pulso') return {s:[{n:'Pulso',c:'#7c3aed',p:pt(sg,x=>x.pul)}],u:'lpm',ref:{min:60,max:100}};
+  if(k==='gluc_cap') return {s:[{n:'Glucosa capilar',c:'#b45309',p:pt(sg,x=>x.glu)}],u:'mg/dL'};
+  const a=AMAP[k]; return {s:[{n:a.n,c:'#0f766e',p:pt(es,x=>x.valores[k])}],u:a.u,ref:{min:a.min,max:a.max},a};
+}
+function renderGraficas(){
+  opcionesGraf(); const k=$('gSel').value; if(!k)return;
+  const d=seriesDe(k); dibujar($('chart'),d);
+  $('gRef').textContent=d.a?`Referencia general: ${refTexto(d.a)}`:k==='imc'?'Normal: 18.5–24.9':k==='pa'?'Normal: menor a 120/80':'';
+  const filas=[]; const mapa={};
+  d.s.forEach((s,si)=>s.p.forEach(p=>{(mapa[p.f]=mapa[p.f]||{f:p.f,v:[]}).v[si]=p.v;}));
+  Object.values(mapa).sort((a,b)=>b.f.localeCompare(a.f)).forEach(r=>filas.push(`<tr><td>${fmtF(r.f)}</td>${d.s.map((s,i)=>`<td>${fmtN(r.v[i])}</td>`).join('')}${d.a?`<td>${etiquetaEstado(d.a,r.v[0])}</td>`:''}</tr>`));
+  $('gTabla').innerHTML=filas.length?`<tr><th>Fecha</th>${d.s.map(s=>`<th>${esc(s.n)}${d.u?' ('+d.u+')':''}</th>`).join('')}${d.a?'<th></th>':''}</tr>`+filas.join(''):'<tr><td class="empty">Sin datos para este indicador.</td></tr>';
+}
+function dibujar(cv,d){
+  const dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;
+  const c=cv.getContext('2d');c.scale(dpr,dpr);c.clearRect(0,0,W,H);c.font='11px system-ui';
+  const pts=d.s.flatMap(s=>s.p);
+  if(!pts.length){c.fillStyle='#6b7280';c.textAlign='center';c.fillText('Sin datos todavía',W/2,H/2);return;}
+  let vs=pts.map(p=>p.v); if(d.ref){if(d.ref.min!=null)vs.push(d.ref.min);if(d.ref.max!=null)vs.push(d.ref.max);} if(d.lines)vs.push(...d.lines);
+  let lo=Math.min(...vs),hi=Math.max(...vs);const pad=(hi-lo)*0.12||Math.abs(hi)*0.1||1;lo-=pad;hi+=pad;
+  let t0=Math.min(...pts.map(p=>p.t)),t1=Math.max(...pts.map(p=>p.t));if(t0===t1){t0-=864e5*15;t1+=864e5*15;}
+  const L=40,R=10,T=14,B=28,X=t=>L+(t-t0)/(t1-t0)*(W-L-R),Y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
+  if(d.ref&&(d.ref.min!=null||d.ref.max!=null)){const a=d.ref.max!=null?Y(d.ref.max):T,b=d.ref.min!=null?Y(d.ref.min):H-B;c.fillStyle='#dcfce7aa';c.fillRect(L,Math.max(T,a),W-L-R,Math.min(H-B,b)-Math.max(T,a));}
+  c.strokeStyle='#e5e7eb';c.fillStyle='#6b7280';c.textAlign='right';c.lineWidth=1;
+  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,y=Y(v);c.beginPath();c.moveTo(L,y);c.lineTo(W-R,y);c.stroke();c.fillText(fmtN(v.toFixed(Math.abs(hi-lo)<10?1:0)),L-5,y+4);}
+  if(d.lines){c.setLineDash([4,4]);c.strokeStyle='#9ca3af';d.lines.forEach(v=>{c.beginPath();c.moveTo(L,Y(v));c.lineTo(W-R,Y(v));c.stroke();});c.setLineDash([]);}
+  c.textAlign='center';const nT=Math.min(5,Math.max(2,Math.floor((W-L-R)/80)));
+  for(let i=0;i<nT;i++){const t=t0+(t1-t0)*i/(nT-1);c.textAlign=i===0?'left':i===nT-1?'right':'center';c.fillText(new Date(t).toLocaleDateString('es-MX',{month:'short',year:'2-digit'}),X(t),H-8);}
+  d.s.forEach(s=>{if(!s.p.length)return;c.strokeStyle=s.c;c.lineWidth=2;c.beginPath();s.p.forEach((p,i)=>i?c.lineTo(X(p.t),Y(p.v)):c.moveTo(X(p.t),Y(p.v)));c.stroke();
+    s.p.forEach(p=>{c.fillStyle='#fff';c.beginPath();c.arc(X(p.t),Y(p.v),4,0,7);c.fill();c.fillStyle=s.c;c.beginPath();c.arc(X(p.t),Y(p.v),3,0,7);c.fill();});});
+  if(d.s.length>1){c.textAlign='left';let x=L+4;d.s.forEach(s=>{c.fillStyle=s.c;c.fillRect(x,T-10,10,3);c.fillText(s.n,x+14,T-6);x+=c.measureText(s.n).width+30;});}
+}
+function renderTodo(){renderPerfiles();renderResumen();renderEstudios();renderSignos();if($('v-graficas').classList.contains('on'))renderGraficas();}
+
+/* ================= Navegación ================= */
+function ir(v){document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));if(v==='graficas')renderGraficas();window.scrollTo(0,0);}
+$('nav').onclick=e=>{const b=e.target.closest('button');if(b)ir(b.dataset.v);};
+$('rLabs').onclick=e=>{const t=e.target.closest('[data-graf]');if(!t)return;ir('graficas');$('gSel').value=t.dataset.graf;renderGraficas();};
+$('gSel').onchange=renderGraficas;
+window.addEventListener('resize',()=>{if($('v-graficas').classList.contains('on'))renderGraficas();});
+$('perfilSel').onchange=e=>{S.perfil=e.target.value;localStorage.setItem('perfil',S.perfil);$('sEst').value='';renderTodo();};
+
+/* ================= Revisión de estudio ================= */
+let edit=null; // {id, valores, pdf, nombreArchivo, texto}
+function abrirModal(d){
+  edit=d; $('mTitulo').textContent=d.id?'Editar estudio':'Revisar estudio';
+  $('mFecha').value=d.fecha||new Date().toISOString().slice(0,10); $('mLab').value=d.lab||'';
+  const n=Object.keys(d.valores).length;
+  $('mAviso').innerHTML=d.texto!=null?(n?`Se encontraron <b>${n}</b> valores. Compáralos con tu PDF y corrige lo que haga falta.`:'No se reconocieron valores automáticamente. Agrégalos abajo; en "Ver texto leído" puedes ver lo que se extrajo.'):'';
+  $('mTxtBox').style.display=d.texto?'block':'none'; $('mTxt').textContent=d.texto||'';
+  $('toast').style.display='none'; filasModal(); $('modal').classList.add('on');
+}
+function filasModal(){
+  const ks=ANALITOS.map(a=>a.k).filter(k=>k in edit.valores);
+  $('mFilas').innerHTML=ks.map(k=>{const a=AMAP[k];return`<tr><td>${esc(a.n)}</td><td><input type="number" step="any" inputmode="decimal" data-k="${k}" value="${edit.valores[k]??''}"></td><td class="mut">${a.u}</td><td><button class="del sm" data-quita="${k}">✕</button></td></tr>`;}).join('')||'<tr><td colspan="4" class="mut">Sin valores todavía.</td></tr>';
+  $('mAdd').innerHTML='<option value="">Agregar otro estudio…</option>'+ANALITOS.filter(a=>!(a.k in edit.valores)).map(a=>`<option value="${a.k}">${esc(a.n)}</option>`).join('');
+}
+function leerFilas(){document.querySelectorAll('#mFilas input[data-k]').forEach(i=>{edit.valores[i.dataset.k]=i.value===''?null:parseFloat(i.value.replace(',','.'));});}
+$('mFilas').onclick=e=>{const b=e.target.closest('[data-quita]');if(!b)return;leerFilas();delete edit.valores[b.dataset.quita];filasModal();};
+$('mAddBtn').onclick=()=>{const k=$('mAdd').value;if(!k)return;leerFilas();edit.valores[k]=null;filasModal();const i=document.querySelector(`#mFilas input[data-k="${k}"]`);i&&i.focus();};
+$('mCancel').onclick=()=>{$('modal').classList.remove('on');edit=null;};
+$('mSave').onclick=async()=>{
+  leerFilas(); const valores={}; for(const [k,v] of Object.entries(edit.valores)) if(v!=null&&isFinite(v)) valores[k]=v;
+  if(!Object.keys(valores).length){toast('Agrega al menos un valor');return;}
+  if(!$('mFecha').value){toast('Indica la fecha del estudio');return;}
+  const prev=edit.id?S.estudios.find(x=>x.id===edit.id):null;
+  const o={id:edit.id||uid(),perfil:prev?prev.perfil:S.perfil,fecha:$('mFecha').value,lab:$('mLab').value.trim(),valores,pdf:edit.pdf||(prev&&prev.pdf)||null,nombreArchivo:edit.nombreArchivo||(prev&&prev.nombreArchivo)||''};
+  await DB.put('estudios',o); const i=S.estudios.findIndex(x=>x.id===o.id); if(i>=0)S.estudios[i]=o; else S.estudios.push(o);
+  $('modal').classList.remove('on'); edit=null; renderTodo(); toast('Estudio guardado');
+};
+$('pdfIn').onchange=async e=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f)return;
+  if(typeof pdfjsLib==='undefined'){toast('Abre la app con internet una vez para activar la lectura de PDF');return;}
+  toast('Leyendo PDF…');
+  try{
+    const lineas=await pdfALineas(f); const r=interpretar(lineas);
+    if(!lineas.length) toast('El PDF parece ser una imagen escaneada; captura los valores a mano');
+    abrirModal({valores:r.valores,fecha:r.fecha,lab:r.lab,pdf:f,nombreArchivo:f.name,texto:lineas.join('\n')});
+  }catch(err){console.error(err);toast('No se pudo leer el PDF');abrirModal({valores:{},pdf:f,nombreArchivo:f.name,texto:''});}
+};
+$('btnManual').onclick=()=>abrirModal({valores:{glucosa:null,colesterol:null,hdl:null,ldl:null,trigliceridos:null}});
+$('listaEstudios').onclick=async e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.pdf){const x=S.estudios.find(z=>z.id===b.dataset.pdf);window.open(URL.createObjectURL(x.pdf),'_blank');}
+  if(b.dataset.edit){const x=S.estudios.find(z=>z.id===b.dataset.edit);abrirModal({id:x.id,fecha:x.fecha,lab:x.lab,valores:{...x.valores}});}
+  if(b.dataset.dele&&confirm('¿Borrar este estudio?')){await DB.del('estudios',b.dataset.dele);S.estudios=S.estudios.filter(z=>z.id!==b.dataset.dele);renderTodo();}
+};
+
+/* ================= Signos vitales ================= */
+function ahoraLocal(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16);}
+function prevImc(){const v=imc(+$('sPeso').value,+$('sEst').value);if(!v){$('sImcPrev').textContent='';return;}const[c]=imcCat(v);$('sImcPrev').textContent=`IMC: ${v.toFixed(1)} · ${c}`;}
+$('sPeso').oninput=prevImc;$('sEst').oninput=prevImc;
+$('btnSigno').onclick=async()=>{
+  const num=id=>{const v=$(id).value;return v===''?null:+v;};
+  const o={id:uid(),perfil:S.perfil,fecha:$('sFecha').value||ahoraLocal(),peso:num('sPeso'),sis:num('sSis'),dia:num('sDia'),pul:num('sPul'),glu:num('sGlu'),nota:$('sNota').value.trim()};
+  const est=num('sEst');
+  if(o.peso==null&&o.sis==null&&o.dia==null&&o.pul==null&&o.glu==null){toast('Captura al menos un dato');return;}
+  if((o.sis==null)!==(o.dia==null)){toast('Captura sistólica y diastólica');return;}
+  const p=perfilAct(); if(est&&p&&p.est!==est){p.est=est;await DB.put('perfiles',p);}
+  o.est=est||(p&&p.est)||null; o.imc=imc(o.peso,o.est);
+  await DB.put('signos',o);S.signos.push(o);
+  ['sPeso','sSis','sDia','sPul','sGlu','sNota'].forEach(i=>$(i).value='');$('sFecha').value=ahoraLocal();$('sImcPrev').textContent='';
+  renderTodo();toast('Medición guardada');
+};
+$('listaSignos').onclick=async e=>{const b=e.target.closest('[data-dels]');if(!b||!confirm('¿Borrar esta medición?'))return;await DB.del('signos',b.dataset.dels);S.signos=S.signos.filter(z=>z.id!==b.dataset.dels);renderTodo();};
+
+/* ================= Perfiles ================= */
+$('btnPerfil').onclick=async()=>{const n=$('nuevoPerfil').value.trim();if(!n)return;const p={id:uid(),nombre:n,est:null};await DB.put('perfiles',p);S.perfiles.push(p);S.perfil=p.id;localStorage.setItem('perfil',p.id);$('nuevoPerfil').value='';$('sEst').value='';renderTodo();toast('Persona agregada');};
+$('listaPerfiles').onclick=async e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.ren){const p=S.perfiles.find(x=>x.id===b.dataset.ren);const n=prompt('Nuevo nombre',p.nombre);if(n&&n.trim()){p.nombre=n.trim();await DB.put('perfiles',p);renderTodo();}}
+  if(b.dataset.delp){const p=S.perfiles.find(x=>x.id===b.dataset.delp);if(!confirm(`¿Borrar a ${p.nombre} con todos sus estudios y mediciones?`))return;
+    for(const x of S.estudios.filter(z=>z.perfil===p.id))await DB.del('estudios',x.id);for(const x of S.signos.filter(z=>z.perfil===p.id))await DB.del('signos',x.id);await DB.del('perfiles',p.id);
+    S.estudios=S.estudios.filter(z=>z.perfil!==p.id);S.signos=S.signos.filter(z=>z.perfil!==p.id);S.perfiles=S.perfiles.filter(z=>z.id!==p.id);if(S.perfil===p.id)S.perfil=S.perfiles[0].id;renderTodo();}
+};
+
+/* ================= Respaldo ================= */
+const blobA64=b=>new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(b);});
+$('btnExport').onclick=async()=>{
+  toast('Preparando respaldo…');
+  const est=[];for(const e of S.estudios)est.push({...e,pdf:e.pdf?await blobA64(e.pdf):null});
+  const data=JSON.stringify({app:'misestudios',v:1,fecha:new Date().toISOString(),perfiles:S.perfiles,estudios:est,signos:S.signos});
+  const nombre=`mis-estudios-respaldo-${new Date().toISOString().slice(0,10)}.json`;
+  const file=new File([data],nombre,{type:'application/json'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:'Respaldo Mis Estudios'});return;}catch(err){if(err.name==='AbortError')return;}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=nombre;a.click();
+};
+$('bkIn').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{const d=JSON.parse(await f.text());if(d.app!=='misestudios')throw 0;
+    for(const p of d.perfiles)await DB.put('perfiles',p);
+    for(const x of d.estudios){if(x.pdf)x.pdf=await (await fetch(x.pdf)).blob();await DB.put('estudios',x);}
+    for(const s of d.signos)await DB.put('signos',s);
+    await cargar();toast('Respaldo importado');
+  }catch(err){toast('Archivo de respaldo no válido');}
+};
+
+/* ================= Inicio ================= */
+async function cargar(){
+  S.perfiles=await DB.all('perfiles');S.estudios=await DB.all('estudios');S.signos=await DB.all('signos');
+  if(!S.perfiles.length){const p={id:uid(),nombre:'Yo',est:null};await DB.put('perfiles',p);S.perfiles=[p];}
+  const g=localStorage.getItem('perfil');S.perfil=S.perfiles.some(p=>p.id===g)?g:S.perfiles[0].id;
+  renderTodo();
+}
+(async()=>{
+  $('sFecha').value=ahoraLocal();
+  try{await DB.open();await cargar();}catch(e){document.querySelector('main').innerHTML='<div class="card">Este navegador no permite guardar datos locales.</div>';}
+  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
